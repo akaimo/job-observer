@@ -1,3 +1,3 @@
 package cleaner
 
-const GroupName = "cleaner.akaimo.com"
+const GroupName = "job-observer.akaimo.com"

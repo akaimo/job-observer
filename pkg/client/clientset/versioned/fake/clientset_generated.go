@@ -4,8 +4,8 @@ package fake
 
 import (
 	clientset "github.com/akaimo/job-observer/pkg/client/clientset/versioned"
-	cleanerv1alpha1 "github.com/akaimo/job-observer/pkg/client/clientset/versioned/typed/cleaner/v1alpha1"
-	fakecleanerv1alpha1 "github.com/akaimo/job-observer/pkg/client/clientset/versioned/typed/cleaner/v1alpha1/fake"
+	jobobserverv1alpha1 "github.com/akaimo/job-observer/pkg/client/clientset/versioned/typed/cleaner/v1alpha1"
+	fakejobobserverv1alpha1 "github.com/akaimo/job-observer/pkg/client/clientset/versioned/typed/cleaner/v1alpha1/fake"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/discovery"
@@ -60,7 +60,7 @@ func (c *Clientset) Tracker() testing.ObjectTracker {
 
 var _ clientset.Interface = &Clientset{}
 
-// CleanerV1alpha1 retrieves the CleanerV1alpha1Client
-func (c *Clientset) CleanerV1alpha1() cleanerv1alpha1.CleanerV1alpha1Interface {
-	return &fakecleanerv1alpha1.FakeCleanerV1alpha1{Fake: &c.Fake}
+// JobObserverV1alpha1 retrieves the JobObserverV1alpha1Client
+func (c *Clientset) JobObserverV1alpha1() jobobserverv1alpha1.JobObserverV1alpha1Interface {
+	return &fakejobobserverv1alpha1.FakeJobObserverV1alpha1{Fake: &c.Fake}
 }

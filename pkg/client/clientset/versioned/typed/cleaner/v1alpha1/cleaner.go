@@ -39,7 +39,7 @@ type cleaners struct {
 }
 
 // newCleaners returns a Cleaners
-func newCleaners(c *CleanerV1alpha1Client, namespace string) *cleaners {
+func newCleaners(c *JobObserverV1alpha1Client, namespace string) *cleaners {
 	return &cleaners{
 		client: c.RESTClient(),
 		ns:     namespace,

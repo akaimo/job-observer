@@ -156,9 +156,9 @@ type SharedInformerFactory interface {
 	ForResource(resource schema.GroupVersionResource) (GenericInformer, error)
 	WaitForCacheSync(stopCh <-chan struct{}) map[reflect.Type]bool
 
-	Cleaner() cleaner.Interface
+	JobObserver() cleaner.Interface
 }
 
-func (f *sharedInformerFactory) Cleaner() cleaner.Interface {
+func (f *sharedInformerFactory) JobObserver() cleaner.Interface {
 	return cleaner.New(f, f.namespace, f.tweakListOptions)
 }

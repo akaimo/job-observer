@@ -8,7 +8,7 @@ import (
 	"github.com/akaimo/job-observer/pkg/apis/cleaner"
 )
 
-var SchemeGroupVersion = schema.GroupVersion{Group: cleaner.GroupName, Version: "v1"}
+var SchemeGroupVersion = schema.GroupVersion{Group: cleaner.GroupName, Version: "v1alpha1"}
 
 func Kind(kind string) schema.GroupKind {
 	return SchemeGroupVersion.WithKind(kind).GroupKind()

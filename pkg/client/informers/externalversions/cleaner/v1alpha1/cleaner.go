@@ -45,13 +45,13 @@ func NewFilteredCleanerInformer(client versioned.Interface, namespace string, re
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.CleanerV1alpha1().Cleaners(namespace).List(options)
+				return client.JobObserverV1alpha1().Cleaners(namespace).List(options)
 			},
 			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.CleanerV1alpha1().Cleaners(namespace).Watch(options)
+				return client.JobObserverV1alpha1().Cleaners(namespace).Watch(options)
 			},
 		},
 		&cleanerv1alpha1.Cleaner{},

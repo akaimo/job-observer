@@ -14,13 +14,13 @@ import (
 
 // FakeCleaners implements CleanerInterface
 type FakeCleaners struct {
-	Fake *FakeCleanerV1alpha1
+	Fake *FakeJobObserverV1alpha1
 	ns   string
 }
 
-var cleanersResource = schema.GroupVersionResource{Group: "cleaner.akaimo.com", Version: "v1alpha1", Resource: "cleaners"}
+var cleanersResource = schema.GroupVersionResource{Group: "job-observer.akaimo.com", Version: "v1alpha1", Resource: "cleaners"}
 
-var cleanersKind = schema.GroupVersionKind{Group: "cleaner.akaimo.com", Version: "v1alpha1", Kind: "Cleaner"}
+var cleanersKind = schema.GroupVersionKind{Group: "job-observer.akaimo.com", Version: "v1alpha1", Kind: "Cleaner"}
 
 // Get takes name of the cleaner, and returns the corresponding cleaner object, and an error if there is any.
 func (c *FakeCleaners) Get(name string, options v1.GetOptions) (result *v1alpha1.Cleaner, err error) {
