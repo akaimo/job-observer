@@ -7,3 +7,5 @@ codegen:
 		cleaner:v1alpha1 \
 		--go-header-file  hack/boilerplate.go.txt
 
+run:
+	go run ./cmd/controller/main.go -kubeconfig=${HOME}/.kube/config
