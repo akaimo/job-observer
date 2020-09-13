@@ -2,7 +2,7 @@ package main
 
 import (
 	"flag"
-	"github.com/akaimo/job-observer/cmd/controller/app"
+	cleanercontroller "github.com/akaimo/job-observer/pkg/controller/cleaner"
 	clientset "github.com/akaimo/job-observer/pkg/client/clientset/versioned"
 	informers "github.com/akaimo/job-observer/pkg/client/informers/externalversions"
 	kubeinformers "k8s.io/client-go/informers"
@@ -45,7 +45,7 @@ func main() {
 	kubeInformerFactory := kubeinformers.NewSharedInformerFactory(kubeClient, time.Second*30)
 	cleanerInformerFactory := informers.NewSharedInformerFactory(exampleClient, time.Second*30)
 
-	controller := app.NewController(kubeClient, exampleClient,
+	controller := cleanercontroller.NewController(kubeClient, exampleClient,
 		kubeInformerFactory.Batch().V1().Jobs(),
 		cleanerInformerFactory.JobObserver().V1alpha1().Cleaners())
 
