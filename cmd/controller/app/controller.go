@@ -27,8 +27,8 @@ const controllerAgentName = "cleaner"
 type Controller struct {
 	// kubeclientset is a standard kubernetes clientset
 	kubeclientset kubernetes.Interface
-	// sampleclientset is a clientset for our own API group
-	sampleclientset clientset.Interface
+	// cleanerclientset is a clientset for our own API group
+	cleanerclientset clientset.Interface
 
 	jobLister     batchlisters.JobLister
 	jobSynced     cache.InformerSynced
@@ -64,7 +64,7 @@ func NewController(
 
 	controller := &Controller{
 		kubeclientset:   kubeclientset,
-		sampleclientset: cleanerclientset,
+		cleanerclientset: cleanerclientset,
 		jobLister:       jobInformer.Lister(),
 		jobSynced:       jobInformer.Informer().HasSynced,
 		cleanerLister:   cleanerinformer.Lister(),
