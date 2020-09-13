@@ -2,11 +2,14 @@ package app
 
 import (
 	"fmt"
+	"time"
+
 	clientset "github.com/akaimo/job-observer/pkg/client/clientset/versioned"
 	cleanerscheme "github.com/akaimo/job-observer/pkg/client/clientset/versioned/scheme"
 	informers "github.com/akaimo/job-observer/pkg/client/informers/externalversions/cleaner/v1alpha1"
 	listers "github.com/akaimo/job-observer/pkg/client/listers/cleaner/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
 	jobinformers "k8s.io/client-go/informers/batch/v1"
@@ -18,8 +21,6 @@ import (
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/workqueue"
 	"k8s.io/klog"
-	"time"
-	"k8s.io/apimachinery/pkg/api/errors"
 )
 
 const controllerAgentName = "cleaner"
@@ -63,14 +64,14 @@ func NewController(
 	recorder := eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: controllerAgentName})
 
 	controller := &Controller{
-		kubeclientset:   kubeclientset,
+		kubeclientset:    kubeclientset,
 		cleanerclientset: cleanerclientset,
-		jobLister:       jobInformer.Lister(),
-		jobSynced:       jobInformer.Informer().HasSynced,
-		cleanerLister:   cleanerinformer.Lister(),
-		cleanerSynced:   cleanerinformer.Informer().HasSynced,
-		workqueue:       workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "Cleaners"),
-		recorder:        recorder,
+		jobLister:        jobInformer.Lister(),
+		jobSynced:        jobInformer.Informer().HasSynced,
+		cleanerLister:    cleanerinformer.Lister(),
+		cleanerSynced:    cleanerinformer.Informer().HasSynced,
+		workqueue:        workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "Cleaners"),
+		recorder:         recorder,
 	}
 
 	klog.Info("Setting up event handlers")

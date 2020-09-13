@@ -2,17 +2,18 @@ package main
 
 import (
 	"flag"
-	cleanercontroller "github.com/akaimo/job-observer/pkg/controller/cleaner"
-	clientset "github.com/akaimo/job-observer/pkg/client/clientset/versioned"
-	informers "github.com/akaimo/job-observer/pkg/client/informers/externalversions"
-	kubeinformers "k8s.io/client-go/informers"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/klog"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	clientset "github.com/akaimo/job-observer/pkg/client/clientset/versioned"
+	informers "github.com/akaimo/job-observer/pkg/client/informers/externalversions"
+	cleanercontroller "github.com/akaimo/job-observer/pkg/controller/cleaner"
+	kubeinformers "k8s.io/client-go/informers"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/klog"
 )
 
 var (
