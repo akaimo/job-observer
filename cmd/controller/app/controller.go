@@ -19,6 +19,7 @@ import (
 	"k8s.io/client-go/util/workqueue"
 	"k8s.io/klog"
 	"time"
+	"k8s.io/apimachinery/pkg/api/errors"
 )
 
 const controllerAgentName = "cleaner"
@@ -152,6 +153,23 @@ func (c *Controller) processNextWorkItem() bool {
 }
 
 func (c *Controller) syncHandler(key string) error {
+	namespace, name, err := cache.SplitMetaNamespaceKey(key)
+	if err != nil {
+		utilruntime.HandleError(fmt.Errorf("invalid resource key: %s", key))
+		return nil
+	}
+
+	cr, err := c.cleanerLister.Cleaners(namespace).Get(name)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			utilruntime.HandleError(fmt.Errorf("foo '%s' in work queue no longer exists", key))
+			return nil
+		}
+
+		return err
+	}
+	klog.Infoln(cr)
+
 	return nil
 }
 

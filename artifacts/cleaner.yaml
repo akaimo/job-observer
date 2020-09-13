@@ -1,0 +1,9 @@
+apiVersion: job-observer.akaimo.com/v1alpha1
+kind: Cleaner
+metadata:
+  name: my-cleaner
+spec:
+  ttlAfterFinished: 1h
+  target:
+    app: my
+    name: mikan
