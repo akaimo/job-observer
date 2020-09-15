@@ -171,6 +171,12 @@ func (c *Controller) syncHandler(key string) error {
 	}
 	klog.Infoln(cr)
 
+	duration, err := time.ParseDuration(cr.Spec.TtlAfterFinished)
+	if err != nil {
+		return err
+	}
+	klog.Infoln(duration)
+
 	return nil
 }
 
