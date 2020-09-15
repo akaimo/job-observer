@@ -28,7 +28,10 @@ spec:
           properties:
             ttlAfterFinished:
               type: string
-            target:
+            selector:
               type: object
+              properties:
+                matchLabels:
+                  type: object
           required:
             - ttlAfterFinished

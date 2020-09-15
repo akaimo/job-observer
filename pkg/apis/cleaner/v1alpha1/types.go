@@ -14,7 +14,11 @@ type Cleaner struct {
 
 type CleanerSpec struct {
 	TtlAfterFinished string `json:"ttlAfterFinished"`
-	CleanTarget      map[string]string
+	Selector Selector `json:"selector"`
+}
+
+type Selector struct {
+	MatchLabels map[string]string `json:"matchLabels"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

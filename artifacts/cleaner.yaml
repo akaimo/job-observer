@@ -4,6 +4,7 @@ metadata:
   name: my-cleaner
 spec:
   ttlAfterFinished: 1h
-  target:
-    app: my
-    name: mikan
+  selector:
+    matchLabels:
+      app: my
+      name: mikan
