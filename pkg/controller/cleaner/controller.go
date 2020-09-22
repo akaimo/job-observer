@@ -4,12 +4,15 @@ import (
 	"fmt"
 	"time"
 
+	cleanerv1alpha1 "github.com/akaimo/job-observer/pkg/apis/cleaner/v1alpha1"
 	clientset "github.com/akaimo/job-observer/pkg/client/clientset/versioned"
 	cleanerscheme "github.com/akaimo/job-observer/pkg/client/clientset/versioned/scheme"
 	informers "github.com/akaimo/job-observer/pkg/client/informers/externalversions/cleaner/v1alpha1"
 	listers "github.com/akaimo/job-observer/pkg/client/listers/cleaner/v1alpha1"
+	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
 	jobinformers "k8s.io/client-go/informers/batch/v1"
@@ -177,6 +180,13 @@ func (c *Controller) syncHandler(key string) error {
 	}
 	klog.Infoln(duration)
 
+	jobs, err := c.getJobsMatchCleaner(cr)
+	if err != nil {
+		return err
+	}
+	klog.Infoln(len(jobs))
+	klog.Infoln(jobs)
+
 	return nil
 }
 
@@ -188,4 +198,16 @@ func (c *Controller) enqueueCleanerResource(obj interface{}) {
 		return
 	}
 	c.workqueue.Add(key)
+}
+
+func (c *Controller) getJobsMatchCleaner(cr *cleanerv1alpha1.Cleaner) ([]*batchv1.Job, error) {
+	selector, err := metav1.LabelSelectorAsSelector(cr.Spec.Selector)
+	if err != nil {
+		return nil, fmt.Errorf("couldn't convert Cleaner selector: %v", err)
+	}
+	jobs, err := c.jobLister.Jobs(cr.Namespace).List(selector)
+	if err != nil {
+		return nil, err
+	}
+	return jobs, nil
 }
