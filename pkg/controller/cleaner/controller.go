@@ -187,6 +187,18 @@ func (c *Controller) syncHandler(key string) error {
 	klog.Infoln(len(jobs))
 	klog.Infoln(jobs)
 
+	var deleteList []*batchv1.Job
+	for _, v := range jobs {
+		if expired, err := processTTL(v, duration); err != nil {
+			klog.Error(err)
+			continue
+		} else if !expired {
+			continue
+		}
+		deleteList = append(deleteList, v)
+	}
+	klog.Infoln(deleteList)
+
 	return nil
 }
 
@@ -210,4 +222,71 @@ func (c *Controller) getJobsMatchCleaner(cr *cleanerv1alpha1.Cleaner) ([]*batchv
 		return nil, err
 	}
 	return jobs, nil
+}
+
+func processTTL(job *batchv1.Job, ttl time.Duration) (expired bool, err error) {
+	if job.DeletionTimestamp != nil || !isJobFinished(job) {
+		return false, nil
+	}
+
+	now := time.Now()
+	t, err := timeLeft(job, &now, ttl)
+	if err != nil {
+		return false, err
+	}
+
+	if *t <= 0 {
+		return true, nil
+	}
+
+	return false, nil
+}
+
+func isJobFinished(j *batchv1.Job) bool {
+	for _, c := range j.Status.Conditions {
+		if (c.Type == batchv1.JobComplete || c.Type == batchv1.JobFailed) && c.Status == corev1.ConditionTrue {
+			return true
+		}
+	}
+	return false
+}
+
+func timeLeft(j *batchv1.Job, since *time.Time, ttl time.Duration) (*time.Duration, error) {
+	finishAt, expireAt, err := getFinishAndExpireTime(j, ttl)
+	if err != nil {
+		return nil, err
+	}
+	if finishAt.UTC().After(since.UTC()) {
+		klog.Warningf("Warning: Found Job %s/%s finished in the future. This is likely due to time skew in the cluster. Job cleanup will be deferred.", j.Namespace, j.Name)
+	}
+	remaining := expireAt.UTC().Sub(since.UTC())
+	klog.V(4).Infof("Found Job %s/%s finished at %v, remaining TTL %v since %v, TTL will expire at %v", j.Namespace, j.Name, finishAt.UTC(), remaining, since.UTC(), expireAt.UTC())
+	return &remaining, nil
+}
+
+func getFinishAndExpireTime(j *batchv1.Job, ttl time.Duration) (*time.Time, *time.Time, error) {
+	if !isJobFinished(j) {
+		return nil, nil, fmt.Errorf("job %s/%s should not be cleaned up", j.Namespace, j.Name)
+	}
+	finishAt, err := jobFinishTime(j)
+	if err != nil {
+		return nil, nil, err
+	}
+	finishAtUTC := finishAt.UTC()
+	expireAtUTC := finishAtUTC.Add(ttl)
+	return &finishAtUTC, &expireAtUTC, nil
+}
+
+func jobFinishTime(finishedJob *batchv1.Job) (metav1.Time, error) {
+	for _, c := range finishedJob.Status.Conditions {
+		if (c.Type == batchv1.JobComplete || c.Type == batchv1.JobFailed) && c.Status == corev1.ConditionTrue {
+			finishAt := c.LastTransitionTime
+			if finishAt.IsZero() {
+				return metav1.Time{}, fmt.Errorf("unable to find the time when the Job %s/%s finished", finishedJob.Namespace, finishedJob.Name)
+			}
+			return c.LastTransitionTime, nil
+		}
+	}
+
+	return metav1.Time{}, fmt.Errorf("unable to find the status of the finished Job %s/%s", finishedJob.Namespace, finishedJob.Name)
 }
