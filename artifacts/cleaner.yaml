@@ -3,8 +3,8 @@ kind: Cleaner
 metadata:
   name: my-cleaner
 spec:
-  ttlAfterFinished: 1h
+  ttlAfterFinished: 1m
   selector:
     matchLabels:
       app: my
-      name: mikan
+      version: mikan

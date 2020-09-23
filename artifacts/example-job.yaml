@@ -1,0 +1,39 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: example
+  labels:
+    app: my
+    version: mikan
+spec:
+  template:
+    spec:
+      containers:
+        - name: sh
+          image: busybox
+          command: ["echo", "hoge"]
+      restartPolicy: Never
+  activeDeadlineSeconds: 300
+  backoffLimit: 0
+  completions: 1
+  parallelism: 1
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: pi
+  labels:
+    app: pi
+    version: mikan
+spec:
+  template:
+    spec:
+      containers:
+        - name: pi
+          image: perl
+          command: ["perl", "-Mbignum=bpi", "-wle", "print bpi(2000)"]
+      restartPolicy: Never
+  activeDeadlineSeconds: 300
+  backoffLimit: 0
+  completions: 1
+  parallelism: 1
