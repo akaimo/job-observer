@@ -169,33 +169,13 @@ func (c *Controller) syncHandler(key string) error {
 			utilruntime.HandleError(fmt.Errorf("foo '%s' in work queue no longer exists", key))
 			return nil
 		}
-
 		return err
 	}
 	klog.Infoln(cr)
 
-	duration, err := time.ParseDuration(cr.Spec.TtlAfterFinished)
+	deleteList, err := c.deletableJobs(cr)
 	if err != nil {
 		return err
-	}
-	klog.Infoln(duration)
-
-	jobs, err := c.getJobsMatchCleaner(cr)
-	if err != nil {
-		return err
-	}
-	klog.Infoln(len(jobs))
-	klog.Infoln(jobs)
-
-	var deleteList []*batchv1.Job
-	for _, v := range jobs {
-		if expired, err := processTTL(v, duration); err != nil {
-			klog.Error(err)
-			continue
-		} else if !expired {
-			continue
-		}
-		deleteList = append(deleteList, v)
 	}
 	klog.Infoln(deleteList)
 
@@ -210,6 +190,31 @@ func (c *Controller) enqueueCleanerResource(obj interface{}) {
 		return
 	}
 	c.workqueue.Add(key)
+}
+
+func (c *Controller) deletableJobs(cr *cleanerv1alpha1.Cleaner) ([]*batchv1.Job, error) {
+	jobs, err := c.getJobsMatchCleaner(cr)
+	if err != nil {
+		return nil, err
+	}
+
+	duration, err := time.ParseDuration(cr.Spec.TtlAfterFinished)
+	if err != nil {
+		return nil, err
+	}
+
+	var deleteList []*batchv1.Job
+	for _, v := range jobs {
+		if expired, err := processTTL(v, duration); err != nil {
+			klog.Error(err)
+			continue
+		} else if !expired {
+			continue
+		}
+		deleteList = append(deleteList, v)
+	}
+
+	return deleteList, nil
 }
 
 func (c *Controller) getJobsMatchCleaner(cr *cleanerv1alpha1.Cleaner) ([]*batchv1.Job, error) {
