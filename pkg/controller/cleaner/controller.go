@@ -171,13 +171,16 @@ func (c *Controller) syncHandler(key string) error {
 		}
 		return err
 	}
-	klog.Infoln(cr)
 
 	deleteList, err := c.getDeletableJobs(cr)
 	if err != nil {
 		return err
 	}
-	klog.Infoln(deleteList)
+
+	err = c.deleteJobs(deleteList)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -227,6 +230,22 @@ func (c *Controller) getJobsMatchCleaner(cr *cleanerv1alpha1.Cleaner) ([]*batchv
 		return nil, err
 	}
 	return jobs, nil
+}
+
+func (c Controller) deleteJobs(jobs []*batchv1.Job) error {
+	for _, v := range jobs {
+		policy := metav1.DeletePropagationForeground
+		options := &metav1.DeleteOptions{
+			PropagationPolicy: &policy,
+			Preconditions:     &metav1.Preconditions{UID: &v.UID},
+		}
+		klog.V(4).Infof("Cleaning up Job %s/%s", v.Namespace, v.Name)
+		err := c.kubeclientset.BatchV1().Jobs(v.Namespace).Delete(v.Name, options)
+		if err != nil {
+			klog.Error(err)
+		}
+	}
+	return nil
 }
 
 func processTTL(job *batchv1.Job, ttl time.Duration) (expired bool, err error) {
