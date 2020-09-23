@@ -173,7 +173,7 @@ func (c *Controller) syncHandler(key string) error {
 	}
 	klog.Infoln(cr)
 
-	deleteList, err := c.deletableJobs(cr)
+	deleteList, err := c.getDeletableJobs(cr)
 	if err != nil {
 		return err
 	}
@@ -192,7 +192,7 @@ func (c *Controller) enqueueCleanerResource(obj interface{}) {
 	c.workqueue.Add(key)
 }
 
-func (c *Controller) deletableJobs(cr *cleanerv1alpha1.Cleaner) ([]*batchv1.Job, error) {
+func (c *Controller) getDeletableJobs(cr *cleanerv1alpha1.Cleaner) ([]*batchv1.Job, error) {
 	jobs, err := c.getJobsMatchCleaner(cr)
 	if err != nil {
 		return nil, err
