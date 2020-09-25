@@ -17,7 +17,7 @@ rules:
       - "job-observer.akaimo.com"
       - "batch"
     resources:
-      - "cleaner"
+      - "cleaners"
       - "jobs"
     verbs:
       - "list"
@@ -37,4 +37,26 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: job-observer
-    namespace: default
+    namespace: job-observer
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: job-observer
+  namespace: job-observer
+  labels:
+    app: job-observer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: job-observer
+  template:
+    metadata:
+      labels:
+        app: job-observer
+    spec:
+      serviceAccount: job-observer
+      containers:
+        - name: job-observer
+          image: "ghcr.io/akaimo/job-observer:0.1.0"
