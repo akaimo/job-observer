@@ -7,5 +7,17 @@ codegen:
 		cleaner:v1alpha1 \
 		--go-header-file  hack/boilerplate.go.txt
 
+.PHONY: run
 run:
 	go run ./cmd/controller/main.go -kubeconfig=${HOME}/.kube/config
+
+REGISTRY := ghcr.io/akaimo/job-observer
+VERSION  := 0.1.0
+
+.PHONY: build-image
+build-image:
+	docker build -t $(REGISTRY):$(VERSION) .
+
+.PHONY: push-image
+push-image: build-image
+	docker push $(REGISTRY):$(VERSION)
