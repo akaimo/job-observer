@@ -10,7 +10,6 @@ apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
 metadata:
   name: job-observer
-  namespace: job-observer
   labels:
     app: job-observer
 rules:
@@ -29,7 +28,6 @@ apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
 metadata:
   name: job-observer
-  namespace: job-observer
   labels:
     app: job-observer
 roleRef:
