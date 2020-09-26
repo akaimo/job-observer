@@ -28,6 +28,8 @@ spec:
           properties:
             ttlAfterFinished:
               type: string
+            cleaningJobStatus:
+              type: string
             selector:
               type: object
               properties:

@@ -13,8 +13,9 @@ type Cleaner struct {
 }
 
 type CleanerSpec struct {
-	TtlAfterFinished string `json:"ttlAfterFinished"`
-	Selector *metav1.LabelSelector `json:"selector"`
+	TtlAfterFinished  string                `json:"ttlAfterFinished"`
+	CleaningJobStatus string                `json:"cleaningJobStatus"`
+	Selector          *metav1.LabelSelector `json:"selector"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
