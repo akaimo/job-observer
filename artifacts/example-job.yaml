@@ -37,3 +37,23 @@ spec:
   backoffLimit: 0
   completions: 1
   parallelism: 1
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: failed-job
+  labels:
+    app: my
+    version: mikan
+spec:
+  template:
+    spec:
+      containers:
+        - name: failed-job
+          image: busybox
+          command: ["rm", "/"]
+      restartPolicy: Never
+  activeDeadlineSeconds: 300
+  backoffLimit: 0
+  completions: 1
+  parallelism: 1
