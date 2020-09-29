@@ -21,3 +21,7 @@ build-image:
 .PHONY: push-image
 push-image: build-image
 	docker push $(REGISTRY):$(VERSION)
+
+.PHONY: test
+test:
+	go test -v ./...
