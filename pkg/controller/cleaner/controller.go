@@ -229,7 +229,13 @@ func (c *Controller) getJobsMatchCleaner(cr *cleanerv1alpha1.Cleaner) ([]*batchv
 	if err != nil {
 		return nil, err
 	}
-	return jobs, nil
+	var finishedJobs []*batchv1.Job
+	for _, j := range jobs {
+		if isJobFinished(j) {
+			finishedJobs = append(finishedJobs, j)
+		}
+	}
+	return finishedJobs, nil
 }
 
 func (c Controller) deleteJobs(jobs []*batchv1.Job) error {
