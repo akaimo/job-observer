@@ -201,6 +201,11 @@ func (c *Controller) getDeletableJobs(cr *cleanerv1alpha1.Cleaner) ([]*batchv1.J
 		return nil, err
 	}
 
+	jobs, err = filterJobFromCleanerTarget(cr, jobs)
+	if err != nil {
+		return nil, err
+	}
+
 	duration, err := time.ParseDuration(cr.Spec.TtlAfterFinished)
 	if err != nil {
 		return nil, err
@@ -229,7 +234,51 @@ func (c *Controller) getJobsMatchCleaner(cr *cleanerv1alpha1.Cleaner) ([]*batchv
 	if err != nil {
 		return nil, err
 	}
-	return jobs, nil
+	var finishedJobs []*batchv1.Job
+	for _, j := range jobs {
+		if isJobFinished(j) {
+			finishedJobs = append(finishedJobs, j)
+		}
+	}
+	return finishedJobs, nil
+}
+
+func filterJobFromCleanerTarget(cr *cleanerv1alpha1.Cleaner, jobs []*batchv1.Job) ([]*batchv1.Job, error) {
+	if cr.Spec.CleaningJobStatus == "" || cr.Spec.CleaningJobStatus == "All" {
+		return jobs, nil
+	}
+
+	var targetStatus batchv1.JobConditionType
+	switch cr.Spec.CleaningJobStatus {
+	case "Complete":
+		targetStatus = batchv1.JobComplete
+	case "Failed":
+		targetStatus = batchv1.JobFailed
+	default:
+		return nil, fmt.Errorf("Unsupport Status '%s'\n", cr.Spec.CleaningJobStatus)
+	}
+
+	return filterJobFromCondition(jobs, targetStatus), nil
+}
+
+func filterJobFromCondition(jobs []*batchv1.Job, condition batchv1.JobConditionType) []*batchv1.Job {
+	var filteredJob []*batchv1.Job
+	for _, j := range jobs {
+		if isJobCondition(j, condition) {
+			filteredJob = append(filteredJob, j)
+		}
+	}
+	return filteredJob
+}
+
+func isJobCondition(job *batchv1.Job, condition batchv1.JobConditionType) bool {
+	c := jobLastCondition(job)
+	return c.Type == condition
+}
+
+func jobLastCondition(job *batchv1.Job) batchv1.JobCondition {
+	n := len(job.Status.Conditions)
+	return job.Status.Conditions[n-1]
 }
 
 func (c Controller) deleteJobs(jobs []*batchv1.Job) error {

@@ -4,7 +4,7 @@ metadata:
   name: my-cleaner
 spec:
   ttlAfterFinished: 1m
-  cleaningJobStatus: Success
+  cleaningJobStatus: Complete
   selector:
     matchLabels:
       app: my
