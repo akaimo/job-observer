@@ -28,4 +28,4 @@ test:
 
 .PHONY: bundle
 bundle:
-	helm template helm/ > bundle.yaml
+	helm template helm/ --namespace job-observer > bundle.yaml

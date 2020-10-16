@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: job-observer
-  namespace: job-observer
+  namespace: {{ .Release.Namespace | quote }}
   labels:
     app: job-observer
     helm.sh/chart: {{ template "job-observer.chart" . }}
