@@ -1,5 +1,6 @@
 # job-observer
 ![Go test](https://github.com/akaimo/job-observer/workflows/Go%20test/badge.svg)
+[![Go Report Card](https://goreportcard.com/badge/github.com/akaimo/job-observer)](https://goreportcard.com/report/github.com/akaimo/job-observer)
 
 job-observer deletes a Job that has been stopped for an arbitrary amount of time.
 
