@@ -3,16 +3,19 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: job-observer
+  name: "job-observer"
+  labels:
+    helm.sh/chart: job-observer-0.1.1
 ---
 # Source: job-observer/templates/serviceaccount.yaml
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: job-observer
-  namespace: job-observer
+  namespace: "job-observer"
   labels:
     app: job-observer
+    helm.sh/chart: job-observer-0.1.1
 ---
 # Source: job-observer/templates/crds.yaml
 apiVersion: apiextensions.k8s.io/v1beta1
@@ -63,6 +66,7 @@ metadata:
   name: job-observer
   labels:
     app: job-observer
+    helm.sh/chart: job-observer-0.1.1
 rules:
   - apiGroups:
       - "job-observer.akaimo.com"
@@ -82,6 +86,7 @@ metadata:
   name: job-observer
   labels:
     app: job-observer
+    helm.sh/chart: job-observer-0.1.1
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -89,28 +94,33 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: job-observer
-    namespace: job-observer
+    namespace: "job-observer"
 ---
 # Source: job-observer/templates/deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: job-observer
-  namespace: job-observer
+  namespace: "job-observer"
   labels:
     app: job-observer
+    helm.sh/chart: job-observer-0.1.1
 spec:
   replicas: 1
   selector:
     matchLabels:
       app: job-observer
+      helm.sh/chart: job-observer-0.1.1
   template:
     metadata:
       labels:
         app: job-observer
+        helm.sh/chart: job-observer-0.1.1
     spec:
       serviceAccount: job-observer
       containers:
         - name: job-observer
           image: "ghcr.io/akaimo/job-observer:0.1.1"
           imagePullPolicy: IfNotPresent
+          resources:
+            {}
