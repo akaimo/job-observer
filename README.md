@@ -1,4 +1,5 @@
 # job-observer
+![Go test](https://github.com/akaimo/job-observer/workflows/Go%20test/badge.svg)
 
 job-observer deletes a Job that has been stopped for an arbitrary amount of time.
 
