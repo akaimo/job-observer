@@ -5,15 +5,18 @@ metadata:
   namespace: job-observer
   labels:
     app: job-observer
+    helm.sh/chart: {{ template "job-observer.chart" . }}
 spec:
   replicas: 1
   selector:
     matchLabels:
       app: job-observer
+      helm.sh/chart: {{ template "job-observer.chart" . }}
   template:
     metadata:
       labels:
         app: job-observer
+        helm.sh/chart: {{ template "job-observer.chart" . }}
     spec:
       serviceAccount: job-observer
       containers:
