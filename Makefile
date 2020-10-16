@@ -25,3 +25,7 @@ push-image: build-image
 .PHONY: test
 test:
 	go test -v ./...
+
+.PHONY: bundle
+bundle:
+	helm template helm/ --namespace job-observer > bundle.yaml

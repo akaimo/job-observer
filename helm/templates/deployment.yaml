@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: job-observer
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    app: job-observer
+    helm.sh/chart: {{ template "job-observer.chart" . }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: job-observer
+      helm.sh/chart: {{ template "job-observer.chart" . }}
+  template:
+    metadata:
+      labels:
+        app: job-observer
+        helm.sh/chart: {{ template "job-observer.chart" . }}
+    spec:
+      serviceAccount: job-observer
+      containers:
+        - name: job-observer
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
