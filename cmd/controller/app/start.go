@@ -36,5 +36,5 @@ func NewCommandStartJobObserverController(stopCh <-chan struct{}) *cobra.Command
 }
 
 func (o JobObserverControllerOptions) RunJobObserverController(stopCh <-chan struct{}) {
-	// Run controller
+	Run(stopCh)
 }
