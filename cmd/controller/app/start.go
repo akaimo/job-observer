@@ -1,39 +1,17 @@
 package app
 
 import (
+	"github.com/akaimo/job-observer/cmd/controller/app/options"
 	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
 )
 
 type JobObserverControllerOptions struct {
-	ControllerOptions *ControllerOptions
-}
-
-type ControllerOptions struct {
-	Kubeconfig string
-	MasterURL string
-}
-
-const (
-	defaultKubeconfig = ""
-	defaultMasterURL = ""
-)
-
-func (o *ControllerOptions) AddFlags(fs *pflag.FlagSet) {
-	fs.StringVar(&o.Kubeconfig, "kubeconfig", defaultKubeconfig, "Path to a kubeconfig. Only required if out-of-cluster.")
-	fs.StringVar(&o.MasterURL, "master", defaultMasterURL, "The address of the Kubernetes API server. Overrides any value in kubeconfig. Only required if out-of-cluster.")
-}
-
-func NewControllerOptions() *ControllerOptions {
-	return &ControllerOptions{
-		Kubeconfig: defaultKubeconfig,
-		MasterURL: defaultMasterURL,
-	}
+	ControllerOptions *options.ControllerOptions
 }
 
 func NewJobObserverControllerOptions() *JobObserverControllerOptions {
 	o := &JobObserverControllerOptions{
-		ControllerOptions: NewControllerOptions(),
+		ControllerOptions: options.NewControllerOptions(),
 	}
 	return o
 }
