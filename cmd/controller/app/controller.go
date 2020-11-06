@@ -14,17 +14,42 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/klog"
 	"os"
+	"sync"
 	"time"
 )
 
 func Run(opts *options.ControllerOptions, stopCh <-chan struct{}) {
 	rootCtx := contextWithStopCh(context.Background(), stopCh)
 
-	_, _, err := buildControllerContext(rootCtx, stopCh, opts)
+	controller, _, err := buildControllerContext(rootCtx, stopCh, opts)
 	if err != nil {
 		klog.Error(err, "error building controller context", "options", opts)
 		os.Exit(1)
 	}
+
+	var wg sync.WaitGroup
+	run := func(_ context.Context) {
+		wg.Add(1)
+		go func(controller *cleaner.Controller) {
+			defer wg.Done()
+			klog.Info("start controller")
+
+			workers := 2
+			err := controller.Run(workers, stopCh)
+			if err != nil {
+				klog.Fatalf("Error running controller: %s", err.Error())
+			}
+		}(controller)
+
+		// TODO: Start SharedInformerFactories
+		wg.Wait()
+
+		klog.Info("control loops exited")
+		os.Exit(0)
+	}
+	run(rootCtx)
+
+	// TODO: Start LeaderElection
 }
 
 func contextWithStopCh(ctx context.Context, stopCh <-chan struct{}) context.Context {
@@ -65,6 +90,10 @@ func buildControllerContext(ctx context.Context, stopCh <-chan struct{}, opts *o
 	controller := cleanercontroller.NewController(kubeClient, client,
 		kubeInformerFactory.Batch().V1().Jobs(),
 		cleanerInformerFactory.JobObserver().V1alpha1().Cleaners())
+
+	klog.V(4).Info("start shared informer factories")
+	kubeInformerFactory.Start(stopCh)
+	cleanerInformerFactory.Start(stopCh)
 
 	return controller, kubeCfg, nil
 }
