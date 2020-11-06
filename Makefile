@@ -9,7 +9,7 @@ codegen:
 
 .PHONY: run
 run:
-	go run ./cmd/controller/main.go -kubeconfig=${HOME}/.kube/config
+	go run ./cmd/controller/main.go --kubeconfig=${HOME}/.kube/config
 
 REGISTRY := ghcr.io/akaimo/job-observer
 VERSION  := 0.1.1
