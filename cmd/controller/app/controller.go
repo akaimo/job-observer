@@ -8,10 +8,14 @@ import (
 	informers "github.com/akaimo/job-observer/pkg/client/informers/externalversions"
 	"github.com/akaimo/job-observer/pkg/controller/cleaner"
 	cleanercontroller "github.com/akaimo/job-observer/pkg/controller/cleaner"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kubeinformers "k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/tools/leaderelection"
+	"k8s.io/client-go/tools/leaderelection/resourcelock"
+	"k8s.io/client-go/tools/record"
 	"k8s.io/klog"
 	"os"
 	"sync"
@@ -21,7 +25,7 @@ import (
 func Run(opts *options.ControllerOptions, stopCh <-chan struct{}) {
 	rootCtx := contextWithStopCh(context.Background(), stopCh)
 
-	controller, _, err := buildControllerContext(rootCtx, stopCh, opts)
+	controller, kubeCfg, err := buildControllerContext(rootCtx, stopCh, opts)
 	if err != nil {
 		klog.Error(err, "error building controller context", "options", opts)
 		os.Exit(1)
@@ -47,9 +51,15 @@ func Run(opts *options.ControllerOptions, stopCh <-chan struct{}) {
 		klog.Info("control loops exited")
 		os.Exit(0)
 	}
-	run(rootCtx)
 
-	// TODO: Start LeaderElection
+	klog.V(2).Info("starting leader election")
+	leaderElectionClient, err := kubernetes.NewForConfig(rest.AddUserAgent(kubeCfg, "leader-election"))
+	if err != nil {
+		klog.Error(err, "error creating leader election client")
+		os.Exit(1)
+	}
+
+	startLeaderElection(rootCtx, opts, leaderElectionClient, controller.Recorder, run)
 }
 
 func contextWithStopCh(ctx context.Context, stopCh <-chan struct{}) context.Context {
@@ -96,4 +106,41 @@ func buildControllerContext(ctx context.Context, stopCh <-chan struct{}, opts *o
 	cleanerInformerFactory.Start(stopCh)
 
 	return controller, kubeCfg, nil
+}
+
+func startLeaderElection(ctx context.Context, opts *options.ControllerOptions, leaderElectionClient kubernetes.Interface, recorder record.EventRecorder, run func(context.Context)) {
+	// Identity used to distinguish between multiple controller manager instances
+	id, err := os.Hostname()
+	if err != nil {
+		klog.Error(err, "error getting hostname")
+		os.Exit(1)
+	}
+
+	// Lock required for leader election
+	rl := resourcelock.ConfigMapLock{
+		ConfigMapMeta: metav1.ObjectMeta{
+			Namespace: opts.LeaderElectionNamespace,
+			Name:      "job-observer-controller",
+		},
+		Client: leaderElectionClient.CoreV1(),
+		LockConfig: resourcelock.ResourceLockConfig{
+			Identity:      id + "-external-job-observer-controller",
+			EventRecorder: recorder,
+		},
+	}
+
+	// Try and become the leader and start controller manager loops
+	leaderelection.RunOrDie(ctx, leaderelection.LeaderElectionConfig{
+		Lock:          &rl,
+		LeaseDuration: opts.LeaderElectionLeaseDuration,
+		RenewDeadline: opts.LeaderElectionRenewDeadline,
+		RetryPeriod:   opts.LeaderElectionRetryPeriod,
+		Callbacks: leaderelection.LeaderCallbacks{
+			OnStartedLeading: run,
+			OnStoppedLeading: func() {
+				klog.V(0).Info("leader election lost")
+				os.Exit(1)
+			},
+		},
+	})
 }
