@@ -2,67 +2,27 @@ package main
 
 import (
 	"flag"
+	"github.com/akaimo/job-observer/cmd/controller/app"
+	"k8s.io/klog"
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
-
-	clientset "github.com/akaimo/job-observer/pkg/client/clientset/versioned"
-	informers "github.com/akaimo/job-observer/pkg/client/informers/externalversions"
-	cleanercontroller "github.com/akaimo/job-observer/pkg/controller/cleaner"
-	kubeinformers "k8s.io/client-go/informers"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/klog"
-)
-
-var (
-	masterURL  string
-	kubeconfig string
 )
 
 func main() {
 	klog.InitFlags(nil)
-	flag.Parse()
 
 	// set up signals so we handle the first shutdown signal gracefully
 	stopCh := setupSignalHandler()
 
-	cfg, err := clientcmd.BuildConfigFromFlags(masterURL, kubeconfig)
-	if err != nil {
-		klog.Fatalf("Error building kubeconfig: %s", err.Error())
+	cmd := app.NewCommandStartJobObserverController(stopCh)
+	cmd.Flags().AddGoFlagSet(flag.CommandLine)
+
+	flag.CommandLine.Parse([]string{})
+	if err := cmd.Execute(); err != nil {
+		klog.Error(err, "error executing command")
+		os.Exit(1)
 	}
-
-	kubeClient, err := kubernetes.NewForConfig(cfg)
-	if err != nil {
-		klog.Fatalf("Error building kubernetes clientset: %s", err.Error())
-	}
-
-	exampleClient, err := clientset.NewForConfig(cfg)
-	if err != nil {
-		klog.Fatalf("Error building example clientset: %s", err.Error())
-	}
-
-	kubeInformerFactory := kubeinformers.NewSharedInformerFactory(kubeClient, time.Second*30)
-	cleanerInformerFactory := informers.NewSharedInformerFactory(exampleClient, time.Second*30)
-
-	controller := cleanercontroller.NewController(kubeClient, exampleClient,
-		kubeInformerFactory.Batch().V1().Jobs(),
-		cleanerInformerFactory.JobObserver().V1alpha1().Cleaners())
-
-	// notice that there is no need to run Start methods in a separate goroutine. (i.e. go kubeInformerFactory.Start(stopCh)
-	// Start method is non-blocking and runs all registered informers in a dedicated goroutine.
-	kubeInformerFactory.Start(stopCh)
-	cleanerInformerFactory.Start(stopCh)
-
-	if err = controller.Run(2, stopCh); err != nil {
-		klog.Fatalf("Error running controller: %s", err.Error())
-	}
-}
-
-func init() {
-	flag.StringVar(&kubeconfig, "kubeconfig", "", "Path to a kubeconfig. Only required if out-of-cluster.")
-	flag.StringVar(&masterURL, "master", "", "The address of the Kubernetes API server. Overrides any value in kubeconfig. Only required if out-of-cluster.")
 }
 
 var shutdownSignals = []os.Signal{os.Interrupt, syscall.SIGTERM}
