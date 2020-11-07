@@ -120,7 +120,7 @@ spec:
       serviceAccount: job-observer
       containers:
         - name: job-observer
-          image: "ghcr.io/akaimo/job-observer:0.1.1"
+          image: "ghcr.io/akaimo/job-observer:0.1.2"
           imagePullPolicy: IfNotPresent
           resources:
             {}

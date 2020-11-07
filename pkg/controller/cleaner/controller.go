@@ -47,7 +47,7 @@ type Controller struct {
 	workqueue workqueue.RateLimitingInterface
 	// recorder is an event recorder for recording Event resources to the
 	// Kubernetes API.
-	recorder record.EventRecorder
+	Recorder record.EventRecorder
 }
 
 func NewController(
@@ -74,7 +74,7 @@ func NewController(
 		cleanerLister:    cleanerinformer.Lister(),
 		cleanerSynced:    cleanerinformer.Informer().HasSynced,
 		workqueue:        workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "Cleaners"),
-		recorder:         recorder,
+		Recorder:         recorder,
 	}
 
 	klog.Info("Setting up event handlers")

@@ -4,7 +4,10 @@
 
 image:
   repository: ghcr.io/akaimo/job-observer
-  tag: 0.1.1
+  tag: 0.1.2
   pullPolicy: IfNotPresent
 
 resources: {}
+
+controller:
+  replicas: 1
