@@ -12,7 +12,7 @@ run:
 	go run ./cmd/controller/main.go --kubeconfig=${HOME}/.kube/config
 
 REGISTRY := ghcr.io/akaimo/job-observer
-VERSION  := 0.1.1
+VERSION  := 0.1.2
 
 .PHONY: build-image
 build-image:
