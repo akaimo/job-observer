@@ -8,3 +8,6 @@ image:
   pullPolicy: IfNotPresent
 
 resources: {}
+
+controller:
+  replicas: 1
