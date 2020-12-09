@@ -135,7 +135,7 @@ metadata:
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: job-observer-controller:leaderelection
+  name: job-observer:leaderelection
 subjects:
   - apiGroup: ""
     kind: ServiceAccount
