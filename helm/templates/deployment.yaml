@@ -11,7 +11,6 @@ spec:
   selector:
     matchLabels:
       app: job-observer
-      helm.sh/chart: {{ template "job-observer.chart" . }}
   template:
     metadata:
       labels:
