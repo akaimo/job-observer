@@ -2,11 +2,14 @@ package notificator
 
 import (
 	"fmt"
+	jobobserverv1alpha1 "github.com/akaimo/job-observer/pkg/apis/jobobserver/v1alpha1"
 	clientset "github.com/akaimo/job-observer/pkg/client/clientset/versioned"
 	cleanerscheme "github.com/akaimo/job-observer/pkg/client/clientset/versioned/scheme"
 	informers "github.com/akaimo/job-observer/pkg/client/informers/externalversions/jobobserver/v1alpha1"
 	listers "github.com/akaimo/job-observer/pkg/client/listers/jobobserver/v1alpha1"
+	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
 	jobinformers "k8s.io/client-go/informers/batch/v1"
@@ -139,5 +142,33 @@ func (c *Controller) processNextWorkItem() bool {
 }
 
 func (c *Controller) syncHandler(key string) error {
+	namespace, name, err := cache.SplitMetaNamespaceKey(key)
+	if err != nil {
+		utilruntime.HandleError(fmt.Errorf("invalid resource key: %s", key))
+		return nil
+	}
+
+	n, err := c.notificatorLister.Notificators(namespace).Get(name)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			utilruntime.HandleError(fmt.Errorf("foo '%s' in work queue no longer exists", key))
+			return nil
+		}
+		return err
+	}
+
+	noticeList, err := c.getNoticeJob(n)
+	if err != nil {
+		return err
+	}
+
+	return c.notice(n, noticeList)
+}
+
+func (c *Controller) getNoticeJob(n *jobobserverv1alpha1.Notificator) ([]*batchv1.Job, error) {
+	return nil, nil
+}
+
+func (c *Controller) notice(n *jobobserverv1alpha1.Notificator, js []*batchv1.Job) error {
 	return nil
 }
