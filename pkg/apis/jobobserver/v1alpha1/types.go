@@ -38,7 +38,25 @@ type Notificator struct {
 }
 
 type NotificatorSpec struct {
-	Selector          *metav1.LabelSelector `json:"selector"`
+	Selector *metav1.LabelSelector `json:"selector"`
+	Rule     Rule                  `json:"rule"`
+	Receiver Receiver              `json:"receiver"`
+}
+
+type Rule struct {
+	FinishingDeadline string `json:"finishingDeadline"`
+}
+
+type Receiver struct {
+	SlackConfig SlackConfig `json:"slackConfig"`
+}
+
+type SlackConfig struct {
+	ApiURL    string `json:"apiURL"`
+	Channel   string `json:"channel"`
+	Username  string `json:"username"`
+	IconEmoji string `json:"iconEmoji"`
+	IconURL   string `json:"iconURL"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
