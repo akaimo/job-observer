@@ -39,6 +39,8 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 	// Group=job-observer.akaimo.com, Version=v1alpha1
 	case v1alpha1.SchemeGroupVersion.WithResource("cleaners"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.JobObserver().V1alpha1().Cleaners().Informer()}, nil
+	case v1alpha1.SchemeGroupVersion.WithResource("notificators"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.JobObserver().V1alpha1().Notificators().Informer()}, nil
 
 	}
 

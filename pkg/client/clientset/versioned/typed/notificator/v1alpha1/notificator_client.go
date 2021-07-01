@@ -3,24 +3,19 @@
 package v1alpha1
 
 import (
-	v1alpha1 "github.com/akaimo/job-observer/pkg/apis/cleaner/v1alpha1"
+	v1alpha1 "github.com/akaimo/job-observer/pkg/apis/notificator/v1alpha1"
 	"github.com/akaimo/job-observer/pkg/client/clientset/versioned/scheme"
 	rest "k8s.io/client-go/rest"
 )
 
 type JobObserverV1alpha1Interface interface {
 	RESTClient() rest.Interface
-	CleanersGetter
 	NotificatorsGetter
 }
 
 // JobObserverV1alpha1Client is used to interact with features provided by the job-observer.akaimo.com group.
 type JobObserverV1alpha1Client struct {
 	restClient rest.Interface
-}
-
-func (c *JobObserverV1alpha1Client) Cleaners(namespace string) CleanerInterface {
-	return newCleaners(c, namespace)
 }
 
 func (c *JobObserverV1alpha1Client) Notificators(namespace string) NotificatorInterface {

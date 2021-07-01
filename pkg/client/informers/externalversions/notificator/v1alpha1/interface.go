@@ -8,8 +8,6 @@ import (
 
 // Interface provides access to all the informers in this group version.
 type Interface interface {
-	// Cleaners returns a CleanerInformer.
-	Cleaners() CleanerInformer
 	// Notificators returns a NotificatorInformer.
 	Notificators() NotificatorInformer
 }
@@ -23,11 +21,6 @@ type version struct {
 // New returns a new Interface.
 func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakListOptions internalinterfaces.TweakListOptionsFunc) Interface {
 	return &version{factory: f, namespace: namespace, tweakListOptions: tweakListOptions}
-}
-
-// Cleaners returns a CleanerInformer.
-func (v *version) Cleaners() CleanerInformer {
-	return &cleanerInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
 // Notificators returns a NotificatorInformer.

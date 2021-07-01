@@ -2,6 +2,4 @@
 
 package v1alpha1
 
-type CleanerExpansion interface{}
-
 type NotificatorExpansion interface{}

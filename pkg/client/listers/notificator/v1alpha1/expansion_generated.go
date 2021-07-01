@@ -2,14 +2,6 @@
 
 package v1alpha1
 
-// CleanerListerExpansion allows custom methods to be added to
-// CleanerLister.
-type CleanerListerExpansion interface{}
-
-// CleanerNamespaceListerExpansion allows custom methods to be added to
-// CleanerNamespaceLister.
-type CleanerNamespaceListerExpansion interface{}
-
 // NotificatorListerExpansion allows custom methods to be added to
 // NotificatorLister.
 type NotificatorListerExpansion interface{}

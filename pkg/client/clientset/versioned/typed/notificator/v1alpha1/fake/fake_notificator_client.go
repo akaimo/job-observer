@@ -3,17 +3,13 @@
 package fake
 
 import (
-	v1alpha1 "github.com/akaimo/job-observer/pkg/client/clientset/versioned/typed/cleaner/v1alpha1"
+	v1alpha1 "github.com/akaimo/job-observer/pkg/client/clientset/versioned/typed/notificator/v1alpha1"
 	rest "k8s.io/client-go/rest"
 	testing "k8s.io/client-go/testing"
 )
 
 type FakeJobObserverV1alpha1 struct {
 	*testing.Fake
-}
-
-func (c *FakeJobObserverV1alpha1) Cleaners(namespace string) v1alpha1.CleanerInterface {
-	return &FakeCleaners{c, namespace}
 }
 
 func (c *FakeJobObserverV1alpha1) Notificators(namespace string) v1alpha1.NotificatorInterface {
