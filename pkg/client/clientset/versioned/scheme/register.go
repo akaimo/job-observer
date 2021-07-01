@@ -3,7 +3,7 @@
 package scheme
 
 import (
-	jobobserverv1alpha1 "github.com/akaimo/job-observer/pkg/apis/cleaner/v1alpha1"
+	jobobserverv1alpha1 "github.com/akaimo/job-observer/pkg/apis/jobobserver/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"

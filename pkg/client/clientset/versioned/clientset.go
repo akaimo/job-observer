@@ -5,7 +5,7 @@ package versioned
 import (
 	"fmt"
 
-	jobobserverv1alpha1 "github.com/akaimo/job-observer/pkg/client/clientset/versioned/typed/cleaner/v1alpha1"
+	jobobserverv1alpha1 "github.com/akaimo/job-observer/pkg/client/clientset/versioned/typed/jobobserver/v1alpha1"
 	discovery "k8s.io/client-go/discovery"
 	rest "k8s.io/client-go/rest"
 	flowcontrol "k8s.io/client-go/util/flowcontrol"

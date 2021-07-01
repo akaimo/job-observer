@@ -5,10 +5,10 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
-	"github.com/akaimo/job-observer/pkg/apis/cleaner"
+	"github.com/akaimo/job-observer/pkg/apis/jobobserver"
 )
 
-var SchemeGroupVersion = schema.GroupVersion{Group: cleaner.GroupName, Version: "v1alpha1"}
+var SchemeGroupVersion = schema.GroupVersion{Group: jobobserver.GroupName, Version: "v1alpha1"}
 
 func Kind(kind string) schema.GroupKind {
 	return SchemeGroupVersion.WithKind(kind).GroupKind()

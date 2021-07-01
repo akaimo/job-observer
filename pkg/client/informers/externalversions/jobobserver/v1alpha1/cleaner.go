@@ -5,10 +5,10 @@ package v1alpha1
 import (
 	time "time"
 
-	cleanerv1alpha1 "github.com/akaimo/job-observer/pkg/apis/cleaner/v1alpha1"
+	jobobserverv1alpha1 "github.com/akaimo/job-observer/pkg/apis/jobobserver/v1alpha1"
 	versioned "github.com/akaimo/job-observer/pkg/client/clientset/versioned"
 	internalinterfaces "github.com/akaimo/job-observer/pkg/client/informers/externalversions/internalinterfaces"
-	v1alpha1 "github.com/akaimo/job-observer/pkg/client/listers/cleaner/v1alpha1"
+	v1alpha1 "github.com/akaimo/job-observer/pkg/client/listers/jobobserver/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
@@ -54,7 +54,7 @@ func NewFilteredCleanerInformer(client versioned.Interface, namespace string, re
 				return client.JobObserverV1alpha1().Cleaners(namespace).Watch(options)
 			},
 		},
-		&cleanerv1alpha1.Cleaner{},
+		&jobobserverv1alpha1.Cleaner{},
 		resyncPeriod,
 		indexers,
 	)
@@ -65,7 +65,7 @@ func (f *cleanerInformer) defaultInformer(client versioned.Interface, resyncPeri
 }
 
 func (f *cleanerInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&cleanerv1alpha1.Cleaner{}, f.defaultInformer)
+	return f.factory.InformerFor(&jobobserverv1alpha1.Cleaner{}, f.defaultInformer)
 }
 
 func (f *cleanerInformer) Lister() v1alpha1.CleanerLister {

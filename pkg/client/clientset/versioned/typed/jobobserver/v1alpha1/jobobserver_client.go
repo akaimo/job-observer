@@ -3,7 +3,7 @@
 package v1alpha1
 
 import (
-	v1alpha1 "github.com/akaimo/job-observer/pkg/apis/cleaner/v1alpha1"
+	v1alpha1 "github.com/akaimo/job-observer/pkg/apis/jobobserver/v1alpha1"
 	"github.com/akaimo/job-observer/pkg/client/clientset/versioned/scheme"
 	rest "k8s.io/client-go/rest"
 )

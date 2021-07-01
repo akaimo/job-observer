@@ -8,8 +8,8 @@ import (
 	time "time"
 
 	versioned "github.com/akaimo/job-observer/pkg/client/clientset/versioned"
-	cleaner "github.com/akaimo/job-observer/pkg/client/informers/externalversions/cleaner"
 	internalinterfaces "github.com/akaimo/job-observer/pkg/client/informers/externalversions/internalinterfaces"
+	jobobserver "github.com/akaimo/job-observer/pkg/client/informers/externalversions/jobobserver"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
@@ -156,9 +156,9 @@ type SharedInformerFactory interface {
 	ForResource(resource schema.GroupVersionResource) (GenericInformer, error)
 	WaitForCacheSync(stopCh <-chan struct{}) map[reflect.Type]bool
 
-	JobObserver() cleaner.Interface
+	JobObserver() jobobserver.Interface
 }
 
-func (f *sharedInformerFactory) JobObserver() cleaner.Interface {
-	return cleaner.New(f, f.namespace, f.tweakListOptions)
+func (f *sharedInformerFactory) JobObserver() jobobserver.Interface {
+	return jobobserver.New(f, f.namespace, f.tweakListOptions)
 }

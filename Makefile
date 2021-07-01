@@ -4,7 +4,7 @@ codegen:
 		"deepcopy,client,informer,lister" \
 		github.com/akaimo/job-observer/pkg/client \
 		github.com/akaimo/job-observer/pkg/apis \
-		cleaner:v1alpha1 \
+		jobobserver:v1alpha1 \
 		--go-header-file  hack/boilerplate.go.txt
 
 .PHONY: run

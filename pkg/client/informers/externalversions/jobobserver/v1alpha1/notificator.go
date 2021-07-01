@@ -5,10 +5,10 @@ package v1alpha1
 import (
 	time "time"
 
-	notificatorv1alpha1 "github.com/akaimo/job-observer/pkg/apis/notificator/v1alpha1"
+	jobobserverv1alpha1 "github.com/akaimo/job-observer/pkg/apis/jobobserver/v1alpha1"
 	versioned "github.com/akaimo/job-observer/pkg/client/clientset/versioned"
 	internalinterfaces "github.com/akaimo/job-observer/pkg/client/informers/externalversions/internalinterfaces"
-	v1alpha1 "github.com/akaimo/job-observer/pkg/client/listers/notificator/v1alpha1"
+	v1alpha1 "github.com/akaimo/job-observer/pkg/client/listers/jobobserver/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
@@ -54,7 +54,7 @@ func NewFilteredNotificatorInformer(client versioned.Interface, namespace string
 				return client.JobObserverV1alpha1().Notificators(namespace).Watch(options)
 			},
 		},
-		&notificatorv1alpha1.Notificator{},
+		&jobobserverv1alpha1.Notificator{},
 		resyncPeriod,
 		indexers,
 	)
@@ -65,7 +65,7 @@ func (f *notificatorInformer) defaultInformer(client versioned.Interface, resync
 }
 
 func (f *notificatorInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&notificatorv1alpha1.Notificator{}, f.defaultInformer)
+	return f.factory.InformerFor(&jobobserverv1alpha1.Notificator{}, f.defaultInformer)
 }
 
 func (f *notificatorInformer) Lister() v1alpha1.NotificatorLister {
