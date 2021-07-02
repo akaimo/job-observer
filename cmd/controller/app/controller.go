@@ -6,7 +6,7 @@ import (
 	"github.com/akaimo/job-observer/cmd/controller/app/options"
 	clientset "github.com/akaimo/job-observer/pkg/client/clientset/versioned"
 	informers "github.com/akaimo/job-observer/pkg/client/informers/externalversions"
-	"github.com/akaimo/job-observer/pkg/controller/cleaner"
+	"github.com/akaimo/job-observer/pkg/controller"
 	cleanercontroller "github.com/akaimo/job-observer/pkg/controller/cleaner"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kubeinformers "k8s.io/client-go/informers"
@@ -25,7 +25,7 @@ import (
 func Run(opts *options.ControllerOptions, stopCh <-chan struct{}) {
 	rootCtx := contextWithStopCh(context.Background(), stopCh)
 
-	controller, kubeCfg, err := buildControllerContext(rootCtx, stopCh, opts)
+	cont, kubeCfg, err := buildControllerContext(rootCtx, stopCh, opts)
 	if err != nil {
 		klog.Error(err, "error building controller context", "options", opts)
 		os.Exit(1)
@@ -34,7 +34,7 @@ func Run(opts *options.ControllerOptions, stopCh <-chan struct{}) {
 	var wg sync.WaitGroup
 	run := func(_ context.Context) {
 		wg.Add(1)
-		go func(controller *cleaner.Controller) {
+		go func(controller controller.Controller) {
 			defer wg.Done()
 			klog.Info("start controller")
 
@@ -43,7 +43,7 @@ func Run(opts *options.ControllerOptions, stopCh <-chan struct{}) {
 			if err != nil {
 				klog.Fatalf("Error running controller: %s", err.Error())
 			}
-		}(controller)
+		}(cont)
 
 		// TODO: Start SharedInformerFactories
 		wg.Wait()
@@ -59,7 +59,7 @@ func Run(opts *options.ControllerOptions, stopCh <-chan struct{}) {
 		os.Exit(1)
 	}
 
-	startLeaderElection(rootCtx, opts, leaderElectionClient, controller.Recorder, run)
+	startLeaderElection(rootCtx, opts, leaderElectionClient, cont.Recorder(), run)
 }
 
 func contextWithStopCh(ctx context.Context, stopCh <-chan struct{}) context.Context {
@@ -74,7 +74,7 @@ func contextWithStopCh(ctx context.Context, stopCh <-chan struct{}) context.Cont
 	return ctx
 }
 
-func buildControllerContext(ctx context.Context, stopCh <-chan struct{}, opts *options.ControllerOptions) (*cleaner.Controller, *rest.Config, error) {
+func buildControllerContext(ctx context.Context, stopCh <-chan struct{}, opts *options.ControllerOptions) (controller.Controller, *rest.Config, error) {
 	kubeCfg, err := clientcmd.BuildConfigFromFlags(opts.MasterURL, opts.Kubeconfig)
 	if err != nil {
 		return nil, nil, fmt.Errorf("error creating rest config: %s", err.Error())
