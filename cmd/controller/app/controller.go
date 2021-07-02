@@ -8,6 +8,7 @@ import (
 	informers "github.com/akaimo/job-observer/pkg/client/informers/externalversions"
 	"github.com/akaimo/job-observer/pkg/controller"
 	cleanercontroller "github.com/akaimo/job-observer/pkg/controller/cleaner"
+	notificatorcontroller "github.com/akaimo/job-observer/pkg/controller/notificator"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kubeinformers "k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
@@ -25,7 +26,7 @@ import (
 func Run(opts *options.ControllerOptions, stopCh <-chan struct{}) {
 	rootCtx := contextWithStopCh(context.Background(), stopCh)
 
-	cont, kubeCfg, err := buildControllerContext(rootCtx, stopCh, opts)
+	controllers, kubeCfg, err := buildControllerContext(rootCtx, stopCh, opts)
 	if err != nil {
 		klog.Error(err, "error building controller context", "options", opts)
 		os.Exit(1)
@@ -33,17 +34,19 @@ func Run(opts *options.ControllerOptions, stopCh <-chan struct{}) {
 
 	var wg sync.WaitGroup
 	run := func(_ context.Context) {
-		wg.Add(1)
-		go func(controller controller.Controller) {
-			defer wg.Done()
-			klog.Info("start controller")
+		for _, c := range controllers {
+			wg.Add(1)
+			go func(controller controller.Controller) {
+				defer wg.Done()
+				klog.Info("start controller")
 
-			workers := 2
-			err := controller.Run(workers, stopCh)
-			if err != nil {
-				klog.Fatalf("Error running controller: %s", err.Error())
-			}
-		}(cont)
+				workers := 2
+				err := controller.Run(workers, stopCh)
+				if err != nil {
+					klog.Fatalf("Error running controller: %s", err.Error())
+				}
+			}(c)
+		}
 
 		// TODO: Start SharedInformerFactories
 		wg.Wait()
@@ -59,7 +62,8 @@ func Run(opts *options.ControllerOptions, stopCh <-chan struct{}) {
 		os.Exit(1)
 	}
 
-	startLeaderElection(rootCtx, opts, leaderElectionClient, cont.Recorder(), run)
+	// FIXME: recorder
+	startLeaderElection(rootCtx, opts, leaderElectionClient, controllers[0].Recorder(), run)
 }
 
 func contextWithStopCh(ctx context.Context, stopCh <-chan struct{}) context.Context {
@@ -74,7 +78,7 @@ func contextWithStopCh(ctx context.Context, stopCh <-chan struct{}) context.Cont
 	return ctx
 }
 
-func buildControllerContext(ctx context.Context, stopCh <-chan struct{}, opts *options.ControllerOptions) (controller.Controller, *rest.Config, error) {
+func buildControllerContext(ctx context.Context, stopCh <-chan struct{}, opts *options.ControllerOptions) ([]controller.Controller, *rest.Config, error) {
 	kubeCfg, err := clientcmd.BuildConfigFromFlags(opts.MasterURL, opts.Kubeconfig)
 	if err != nil {
 		return nil, nil, fmt.Errorf("error creating rest config: %s", err.Error())
@@ -96,16 +100,24 @@ func buildControllerContext(ctx context.Context, stopCh <-chan struct{}, opts *o
 
 	kubeInformerFactory := kubeinformers.NewSharedInformerFactory(kubeClient, time.Second*30)
 	cleanerInformerFactory := informers.NewSharedInformerFactory(client, time.Second*30)
+	notificatorInformerFactory := informers.NewSharedInformerFactory(client, time.Second*30)
 
-	controller := cleanercontroller.NewController(kubeClient, client,
-		kubeInformerFactory.Batch().V1().Jobs(),
-		cleanerInformerFactory.JobObserver().V1alpha1().Cleaners())
+	controllers := []controller.Controller{
+		cleanercontroller.NewController(kubeClient, client,
+			kubeInformerFactory.Batch().V1().Jobs(),
+			cleanerInformerFactory.JobObserver().V1alpha1().Cleaners(),
+		),
+		notificatorcontroller.NewController(kubeClient, client,
+			kubeInformerFactory.Batch().V1().Jobs(),
+			notificatorInformerFactory.JobObserver().V1alpha1().Notificators(),
+		),
+	}
 
 	klog.V(4).Info("start shared informer factories")
 	kubeInformerFactory.Start(stopCh)
 	cleanerInformerFactory.Start(stopCh)
 
-	return controller, kubeCfg, nil
+	return controllers, kubeCfg, nil
 }
 
 func startLeaderElection(ctx context.Context, opts *options.ControllerOptions, leaderElectionClient kubernetes.Interface, recorder record.EventRecorder, run func(context.Context)) {
