@@ -2,6 +2,7 @@ package cleaner
 
 import (
 	"fmt"
+	"github.com/akaimo/job-observer/pkg/controller"
 	"time"
 
 	cleanerv1alpha1 "github.com/akaimo/job-observer/pkg/apis/jobobserver/v1alpha1"
@@ -236,7 +237,7 @@ func (c *Controller) getJobsMatchCleaner(cr *cleanerv1alpha1.Cleaner) ([]*batchv
 	}
 	var finishedJobs []*batchv1.Job
 	for _, j := range jobs {
-		if isJobFinished(j) {
+		if controller.IsJobFinished(j) {
 			finishedJobs = append(finishedJobs, j)
 		}
 	}
@@ -298,7 +299,7 @@ func (c Controller) deleteJobs(jobs []*batchv1.Job) error {
 }
 
 func processTTL(job *batchv1.Job, ttl time.Duration) (expired bool, err error) {
-	if job.DeletionTimestamp != nil || !isJobFinished(job) {
+	if job.DeletionTimestamp != nil || !controller.IsJobFinished(job) {
 		return false, nil
 	}
 
@@ -315,15 +316,6 @@ func processTTL(job *batchv1.Job, ttl time.Duration) (expired bool, err error) {
 	return false, nil
 }
 
-func isJobFinished(j *batchv1.Job) bool {
-	for _, c := range j.Status.Conditions {
-		if (c.Type == batchv1.JobComplete || c.Type == batchv1.JobFailed) && c.Status == corev1.ConditionTrue {
-			return true
-		}
-	}
-	return false
-}
-
 func timeLeft(j *batchv1.Job, since *time.Time, ttl time.Duration) (*time.Duration, error) {
 	finishAt, expireAt, err := getFinishAndExpireTime(j, ttl)
 	if err != nil {
@@ -338,7 +330,7 @@ func timeLeft(j *batchv1.Job, since *time.Time, ttl time.Duration) (*time.Durati
 }
 
 func getFinishAndExpireTime(j *batchv1.Job, ttl time.Duration) (*time.Time, *time.Time, error) {
-	if !isJobFinished(j) {
+	if !controller.IsJobFinished(j) {
 		return nil, nil, fmt.Errorf("job %s/%s should not be cleaned up", j.Namespace, j.Name)
 	}
 	finishAt, err := jobFinishTime(j)
