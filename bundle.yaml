@@ -59,6 +59,66 @@ spec:
             - ttlAfterFinished
             - selector
 ---
+# Source: job-observer/templates/crds.yaml
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: notificators.job-observer.akaimo.com
+spec:
+  group: job-observer.akaimo.com
+  version: v1alpha1
+  scope: Namespaced
+  names:
+    plural: notificators
+    singular: notificator
+    kind: Notificator
+  subresources:
+    status: {}
+  additionalPrinterColumns:
+    - name: message
+      type: string
+      description: message content which want to show
+      JSONPath: .status.message
+    - name: AGE
+      type: date
+      JSONPath: .metadata.creationTimestamp
+  validation:
+    openAPIV3Schema:
+      type: object
+      properties:
+        spec:
+          properties:
+            rule:
+              type: object
+              properties:
+                finishingDeadline:
+                  type: string
+            selector:
+              type: object
+              properties:
+                matchLabels:
+                  type: object
+            receiver:
+              type: object
+              properties:
+                slackConfig:
+                  type: object
+                  properties:
+                    apiURL:
+                      type: string
+                    channel:
+                      type: string
+                    username:
+                      type: string
+                    iconEmoji:
+                      type: string
+                    iconURL:
+                      type: string
+          required:
+            - rule
+            - selector
+            - receiver
+---
 # Source: job-observer/templates/serviceaccount.yaml
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
@@ -73,6 +133,7 @@ rules:
       - "batch"
     resources:
       - "cleaners"
+      - "notificators"
       - "jobs"
     verbs:
       - "list"
