@@ -1,0 +1,15 @@
+apiVersion: job-observer.akaimo.com/v1alpha1
+kind: Notificator
+metadata:
+  name: my-notificator
+spec:
+  rule:
+    finishingDeadline: 1m
+  receiver:
+    slackConfig:
+      apiURL: "https://akaimo.com/xxxxx"
+      channel: "#example"
+  selector:
+    matchLabels:
+      app: my
+      version: mikan
