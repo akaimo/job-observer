@@ -116,6 +116,7 @@ func buildControllerContext(ctx context.Context, stopCh <-chan struct{}, opts *o
 	klog.V(4).Info("start shared informer factories")
 	kubeInformerFactory.Start(stopCh)
 	cleanerInformerFactory.Start(stopCh)
+	notificatorInformerFactory.Start(stopCh)
 
 	return controllers, kubeCfg, nil
 }
