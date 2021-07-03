@@ -4,12 +4,14 @@ import (
 	"fmt"
 	jobobserverv1alpha1 "github.com/akaimo/job-observer/pkg/apis/jobobserver/v1alpha1"
 	clientset "github.com/akaimo/job-observer/pkg/client/clientset/versioned"
-	cleanerscheme "github.com/akaimo/job-observer/pkg/client/clientset/versioned/scheme"
+	notificatorscheme "github.com/akaimo/job-observer/pkg/client/clientset/versioned/scheme"
 	informers "github.com/akaimo/job-observer/pkg/client/informers/externalversions/jobobserver/v1alpha1"
 	listers "github.com/akaimo/job-observer/pkg/client/listers/jobobserver/v1alpha1"
+	"github.com/akaimo/job-observer/pkg/controller"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
 	jobinformers "k8s.io/client-go/informers/batch/v1"
@@ -36,7 +38,7 @@ type Controller struct {
 	notificatorSynced cache.InformerSynced
 
 	workqueue workqueue.RateLimitingInterface
-	Recorder  record.EventRecorder
+	recorder  record.EventRecorder
 }
 
 func NewController(
@@ -45,7 +47,7 @@ func NewController(
 	jobInformer jobinformers.JobInformer,
 	notificatorinformer informers.NotificatorInformer) *Controller {
 
-	utilruntime.Must(cleanerscheme.AddToScheme(scheme.Scheme))
+	utilruntime.Must(notificatorscheme.AddToScheme(scheme.Scheme))
 	eventBroadcaster := record.NewBroadcaster()
 	eventBroadcaster.StartLogging(klog.Infof)
 	eventBroadcaster.StartRecordingToSink(&typedcorev1.EventSinkImpl{Interface: kubeclientset.CoreV1().Events("")})
@@ -59,7 +61,7 @@ func NewController(
 		notificatorLister:    notificatorinformer.Lister(),
 		notificatorSynced:    notificatorinformer.Informer().HasSynced,
 		workqueue:            workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "Notificator"),
-		Recorder:             recorder,
+		recorder:             recorder,
 	}
 
 	notificatorinformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
@@ -80,6 +82,10 @@ func (c *Controller) enqueueNotificatorResource(obj interface{}) {
 		return
 	}
 	c.workqueue.Add(key)
+}
+
+func (c *Controller) Recorder() record.EventRecorder {
+	return c.recorder
 }
 
 func (c *Controller) Run(threadiness int, stopCh <-chan struct{}) error {
@@ -166,9 +172,47 @@ func (c *Controller) syncHandler(key string) error {
 }
 
 func (c *Controller) getNoticeJob(n *jobobserverv1alpha1.Notificator) ([]*batchv1.Job, error) {
-	return nil, nil
+	selector, err := metav1.LabelSelectorAsSelector(n.Spec.Selector)
+	if err != nil {
+		return nil, fmt.Errorf("couldn't convert Notificator selector: %v", err)
+	}
+
+	jobs, err := c.jobLister.Jobs(n.Namespace).List(selector)
+	if err != nil {
+		return nil, err
+	}
+
+	var noticeJob []*batchv1.Job
+	for _, j := range jobs {
+		if isNotice, err := isNotice(n, j); err != nil {
+			klog.Error(err)
+			continue
+		} else if isNotice {
+			noticeJob = append(noticeJob, j)
+		}
+	}
+
+	return noticeJob, nil
 }
 
 func (c *Controller) notice(n *jobobserverv1alpha1.Notificator, js []*batchv1.Job) error {
 	return nil
+}
+
+func isNotice(n *jobobserverv1alpha1.Notificator, job *batchv1.Job) (bool, error) {
+	if controller.IsJobFinished(job) {
+		return false, nil
+	}
+
+	deadline, err := time.ParseDuration(n.Spec.Rule.FinishingDeadline)
+	if err != nil {
+		return false, err
+	}
+	runTime := jobRunningTime(job, time.Now())
+
+	return runTime > deadline, nil
+}
+
+func jobRunningTime(job *batchv1.Job, now time.Time) time.Duration {
+	return now.Sub(job.GetCreationTimestamp().Time)
 }
