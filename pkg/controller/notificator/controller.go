@@ -1,6 +1,8 @@
 package notificator
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	jobobserverv1alpha1 "github.com/akaimo/job-observer/pkg/apis/jobobserver/v1alpha1"
 	clientset "github.com/akaimo/job-observer/pkg/client/clientset/versioned"
@@ -23,6 +25,7 @@ import (
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/workqueue"
 	"k8s.io/klog"
+	"net/http"
 	"time"
 )
 
@@ -196,7 +199,74 @@ func (c *Controller) getNoticeJob(n *jobobserverv1alpha1.Notificator) ([]*batchv
 }
 
 func (c *Controller) notice(n *jobobserverv1alpha1.Notificator, js []*batchv1.Job) error {
+	return c.noticeSlack(n, js)
+}
+
+type SlackMessage struct {
+	Channel     string       `json:"channel"`
+	Name        string       `json:"username"`
+	IconEmoji   string       `json:"icon_emoji"`
+	IconURL     string       `json:"icon_url"`
+	Attachments []Attachment `json:"attachments"`
+}
+
+type Attachment struct {
+	Title  string  `json:"title"`
+	Text   string  `json:"text"`
+	Color  string  `json:"color"`
+}
+
+func (c *Controller) noticeSlack(n *jobobserverv1alpha1.Notificator, js []*batchv1.Job) error {
+	webhookURL := ""
+	message := SlackMessage{
+		Channel: n.Spec.Receiver.SlackConfig.Channel,
+		Name: n.Spec.Receiver.SlackConfig.Username,
+		IconEmoji: n.Spec.Receiver.SlackConfig.IconEmoji,
+		IconURL: n.Spec.Receiver.SlackConfig.IconURL,
+		Attachments: []Attachment{
+			{
+				Title: fmt.Sprintf("[NOTICE] job-observer:%s/%s", n.Namespace, n.Name),
+				Text: jobNameList(js),
+				Color: "danger",
+			},
+		},
+	}
+	j, err := json.Marshal(message)
+	if err != nil {
+		return err
+	}
+
+	req, err := http.NewRequest(
+		"POST",
+		webhookURL,
+		bytes.NewBuffer(j),
+	)
+	if err != nil {
+		return err
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
 	return nil
+}
+
+func jobNameList(js []*batchv1.Job) string {
+	var name string
+	for i, v := range js {
+		if i == 0 {
+			name = fmt.Sprintf("%s/%s", v.Namespace, v.Name)
+		} else {
+			name = fmt.Sprintf("%s\n%s/%s", name, v.Namespace, v.Name)
+		}
+	}
+	return name
 }
 
 func isNotice(n *jobobserverv1alpha1.Notificator, job *batchv1.Job) (bool, error) {
