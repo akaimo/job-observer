@@ -109,6 +109,7 @@ func buildControllerContext(ctx context.Context, stopCh <-chan struct{}, opts *o
 		),
 		notificatorcontroller.NewController(kubeClient, client,
 			kubeInformerFactory.Batch().V1().Jobs(),
+			kubeInformerFactory.Core().V1().Secrets(),
 			notificatorInformerFactory.JobObserver().V1alpha1().Notificators(),
 		),
 	}

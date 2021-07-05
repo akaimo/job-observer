@@ -17,10 +17,12 @@ import (
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
 	jobinformers "k8s.io/client-go/informers/batch/v1"
+	secretinformers "k8s.io/client-go/informers/core/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 	typedcorev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	batchlisters "k8s.io/client-go/listers/batch/v1"
+	secretlisters "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/workqueue"
@@ -37,6 +39,8 @@ type Controller struct {
 
 	jobLister         batchlisters.JobLister
 	jobSynced         cache.InformerSynced
+	secretLister      secretlisters.SecretLister
+	secretSynced      cache.InformerSynced
 	notificatorLister listers.NotificatorLister
 	notificatorSynced cache.InformerSynced
 
@@ -48,6 +52,7 @@ func NewController(
 	kubeclientset kubernetes.Interface,
 	notificatorclientset clientset.Interface,
 	jobInformer jobinformers.JobInformer,
+	secretInformer secretinformers.SecretInformer,
 	notificatorinformer informers.NotificatorInformer) *Controller {
 
 	utilruntime.Must(notificatorscheme.AddToScheme(scheme.Scheme))
@@ -61,6 +66,8 @@ func NewController(
 		notificatorclientset: notificatorclientset,
 		jobLister:            jobInformer.Lister(),
 		jobSynced:            jobInformer.Informer().HasSynced,
+		secretLister:         secretInformer.Lister(),
+		secretSynced:         secretInformer.Informer().HasSynced,
 		notificatorLister:    notificatorinformer.Lister(),
 		notificatorSynced:    notificatorinformer.Informer().HasSynced,
 		workqueue:            workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "Notificator"),
@@ -211,22 +218,29 @@ type SlackMessage struct {
 }
 
 type Attachment struct {
-	Title  string  `json:"title"`
-	Text   string  `json:"text"`
-	Color  string  `json:"color"`
+	Title string `json:"title"`
+	Text  string `json:"text"`
+	Color string `json:"color"`
 }
 
 func (c *Controller) noticeSlack(n *jobobserverv1alpha1.Notificator, js []*batchv1.Job) error {
-	webhookURL := ""
+	s, err := c.secretLister.Secrets(n.Namespace).Get(n.Spec.Receiver.SlackConfig.ApiURL.Name)
+	if err != nil {
+		return err
+	}
+	if _, found := s.Data[n.Spec.Receiver.SlackConfig.ApiURL.Key]; !found {
+		return fmt.Errorf("key %q in secret %q not found", n.Spec.Receiver.SlackConfig.ApiURL.Key, n.Spec.Receiver.SlackConfig.ApiURL.Name)
+	}
+	webhookURL := string(s.Data[n.Spec.Receiver.SlackConfig.ApiURL.Key])
 	message := SlackMessage{
-		Channel: n.Spec.Receiver.SlackConfig.Channel,
-		Name: n.Spec.Receiver.SlackConfig.Username,
+		Channel:   n.Spec.Receiver.SlackConfig.Channel,
+		Name:      n.Spec.Receiver.SlackConfig.Username,
 		IconEmoji: n.Spec.Receiver.SlackConfig.IconEmoji,
-		IconURL: n.Spec.Receiver.SlackConfig.IconURL,
+		IconURL:   n.Spec.Receiver.SlackConfig.IconURL,
 		Attachments: []Attachment{
 			{
 				Title: fmt.Sprintf("[NOTICE] job-observer:%s/%s", n.Namespace, n.Name),
-				Text: jobNameList(js),
+				Text:  jobNameList(js),
 				Color: "danger",
 			},
 		},
