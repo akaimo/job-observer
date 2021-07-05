@@ -1,6 +1,9 @@
 package v1alpha1
 
-import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+import (
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
 
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -52,7 +55,7 @@ type Receiver struct {
 }
 
 type SlackConfig struct {
-	ApiURL    string `json:"apiURL"`
+	ApiURL    *corev1.SecretKeySelector `json:"apiURL"`
 	Channel   string `json:"channel"`
 	Username  string `json:"username"`
 	IconEmoji string `json:"iconEmoji"`
