@@ -84,7 +84,7 @@ spec:
                   type: object
                   properties:
                     apiURL:
-                      type: string
+                      type: object
                     channel:
                       type: string
                     username:
