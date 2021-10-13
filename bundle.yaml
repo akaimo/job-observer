@@ -70,9 +70,14 @@ metadata:
 rules:
   - apiGroups:
       - "job-observer.akaimo.com"
-      - "batch"
     resources:
       - "cleaners"
+    verbs:
+      - "list"
+      - "watch"
+  - apiGroups:
+      - "batch"
+    resources:
       - "jobs"
     verbs:
       - "list"
