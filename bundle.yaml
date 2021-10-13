@@ -101,7 +101,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: job-observer:leaderelection
-  namespace: kube-system
+  namespace: "job-observer"
   labels:
     app: job-observer
     helm.sh/chart: job-observer-0.1.4
@@ -128,7 +128,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: job-observer:leaderelection
-  namespace: kube-system
+  namespace: "job-observer"
   labels:
     app: job-observer
     helm.sh/chart: job-observer-0.1.4
