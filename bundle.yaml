@@ -63,64 +63,68 @@ spec:
     kind: Cleaner
 ---
 # Source: job-observer/templates/crds.yaml
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   name: notificators.job-observer.akaimo.com
 spec:
   group: job-observer.akaimo.com
-  version: v1alpha1
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                rule:
+                  type: object
+                  properties:
+                    finishingDeadline:
+                      type: string
+                selector:
+                  type: object
+                  properties:
+                    matchLabels:
+                      type: object
+                receiver:
+                  type: object
+                  properties:
+                    slackConfig:
+                      type: object
+                      properties:
+                        apiURL:
+                          type: object
+                        channel:
+                          type: string
+                        username:
+                          type: string
+                        iconEmoji:
+                          type: string
+                        iconURL:
+                          type: string
+              required:
+                - rule
+                - selector
+                - receiver
+      additionalPrinterColumns:
+        - name: message
+          type: string
+          description: message content which want to show
+          jsonPath: .status.message
+        - name: AGE
+          type: date
+          jsonPath: .metadata.creationTimestamp
+      subresources:
+        status: {}
   scope: Namespaced
   names:
     plural: notificators
     singular: notificator
     kind: Notificator
-  subresources:
-    status: {}
-  additionalPrinterColumns:
-    - name: message
-      type: string
-      description: message content which want to show
-      JSONPath: .status.message
-    - name: AGE
-      type: date
-      JSONPath: .metadata.creationTimestamp
-  validation:
-    openAPIV3Schema:
-      type: object
-      properties:
-        spec:
-          properties:
-            rule:
-              type: object
-              properties:
-                finishingDeadline:
-                  type: string
-            selector:
-              type: object
-              properties:
-                matchLabels:
-                  type: object
-            receiver:
-              type: object
-              properties:
-                slackConfig:
-                  type: object
-                  properties:
-                    apiURL:
-                      type: object
-                    channel:
-                      type: string
-                    username:
-                      type: string
-                    iconEmoji:
-                      type: string
-                    iconURL:
-                      type: string
-          required:
-            - rule
-            - selector
-            - receiver
 ---
 # Source: job-observer/templates/serviceaccount.yaml
 apiVersion: rbac.authorization.k8s.io/v1
