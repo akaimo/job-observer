@@ -33,6 +33,7 @@ spec:
           type: object
           properties:
             spec:
+              type: object
               properties:
                 ttlAfterFinished:
                   type: string
